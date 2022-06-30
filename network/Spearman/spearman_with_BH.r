@@ -1,5 +1,5 @@
 ## description
-#### Here is a advance spearman correlation network constructor.
+#### Here is an advance spearman correlation network constructor.
 #### Inputs: ① otu_table ② p threshold ③ top (Only for debug)
 #### Processing procedures are as follows:
 #### 1. Use WGCNA to get the spearman correlation matrix including coefficient and p-value.
