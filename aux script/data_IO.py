@@ -29,11 +29,18 @@ def read_taxa_id(taxa_path,sep=taxa_sep):
 
     return(df_taxa_id)
 
-def read_data(otu_path,meta_path,taxa_path):
+def read_phy_data(otu_path,meta_path,taxa_path):
     df_otu=read_otu(otu_path)
     df_meta=read_meta(meta_path)
     df_taxa=read_taxa(taxa_path)
     return(df_otu,df_meta,df_taxa)
+
+def read_all_data(otu_path,meta_path,taxa_path,taxa_id_path):
+    df_otu=read_otu(otu_path)
+    df_meta=read_meta(meta_path)
+    df_taxa=read_taxa(taxa_path)
+    df_taxa_id=read_taxa_id(taxa_id_path)
+    return(df_otu,df_meta,df_taxa,df_taxa_id)
 
 #-------------------------- write --------------------------
 
