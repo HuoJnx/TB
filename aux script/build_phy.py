@@ -2,7 +2,24 @@
 def pretty_print(t):
     print(t+"\n")
     
-## help pair the index of otu_table and taxa_table
+## help pair the index of df_meta and df_otu
+def pair_otu_meta(df_otu,df_meta,how="left"):
+    """
+    phyloseq not require the df_otu and df_taxa to have the same samples.
+    
+    But sometimes we will extract data from the built phyloseq object.
+
+    So for safety reason, we'd better pair them first.
+    """
+    if how=="left":
+        pretty_print("Use the index of df_otu.")
+        df_meta=df_meta.reindex(index=df_otu.columns)
+    elif how=="right":
+        pretty_print("Use the index of df_meta.")
+        df_otu=df_otu.reindex(columns=df_meta.index)
+    return(df_otu,df_meta)
+
+## help pair the index of df_otu and df_taxa
 def pair_otu_taxa(df_otu, df_taxa,prompt=True):
     """
     The phyloseq require the df_otu and df_taxa should have the same index, so should pair them.
@@ -28,15 +45,17 @@ def pair_otu_taxa(df_otu, df_taxa,prompt=True):
     #### df_taxa = df_taxa.replace(to_replace=[np.nan,pd.NA], value=None)
     df_taxa=df_taxa.mask(df_taxa.isna(),other=None)
     return df_taxa
-## R wrapper for building a phyloseq object from otu_df, meta_df and taxa_df
 
-def build_phy(df, dfg, dft=NA, taxa_are_rows=True, prompt=True):
+
+
+def build_phy(df, df_meta, dft=NA,taxa_are_rows=True, how_to_pair_meta="left", prompt=True):
+    ## R wrapper for building a phyloseq object from df_otu, df_meta and df_taxa
     string = """
-    build_phy=function(matrix,index,dfg, dft=NA, taxa_are_rows=T){
+    build_phy=function(matrix,index,df_meta, dft=NA, taxa_are_rows=T){
         ## rebuid df
         df = data.frame(matrix)
         rownames(df) = index
-        colnames(df) = rownames(dfg)
+        colnames(df) = rownames(df_meta)
         
         ## make phy obj
         
@@ -44,8 +63,8 @@ def build_phy(df, dfg, dft=NA, taxa_are_rows=True, prompt=True):
         otu_obj=otu_table(df,taxa_are_rows=taxa_are_rows)
         
         #### include meta info 【will create a new columns call 'sample_name', for used in case】
-        dfg["sample_name"]=rownames(dfg)
-        meta_obj=sample_data(dfg)
+        df_meta["sample_name"]=rownames(df_meta)
+        meta_obj=sample_data(df_meta)
         
         #### include taxa info
         if (class(dft)!=class(NA)){
@@ -55,13 +74,17 @@ def build_phy(df, dfg, dft=NA, taxa_are_rows=True, prompt=True):
         }else{
             phy_obj=phyloseq(otu_obj,meta_obj)
         }
-        
         return(phy_obj)
     }
 """
     my_phy_sub = STAP(string, "_")
+
+    ## pair the index of df_meta and df_otu
+    df, df_meta=pair_otu_meta(df,df_meta, how=how_to_pair_meta)
+        
+    ## pair the index of df_otu and df_taxa 
     if type(dft) != type(NA):
         dft = pair_otu_taxa(df, dft,prompt=prompt)
 
-    phy_obj = my_phy_sub.build_phy(df.values, df.index, dfg, dft, taxa_are_rows)
+    phy_obj = my_phy_sub.build_phy(df.values, df.index, df_meta, dft, taxa_are_rows)
     return phy_obj

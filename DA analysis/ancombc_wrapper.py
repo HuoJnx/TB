@@ -17,20 +17,16 @@ def my_ancombc(
     
     1. As default, the W <0 means the first condition has higher abundance, and W>0 means the
         second condition has higher abundance.
-    2. df are taxa in rows, samples in columns.
     
     Arguments:
     
     sort: use which col to sort, supported cols are index, beta, se, W, p_val, q_val, diff_abn, compare.
-    color: use which col to define color, supported cols are index, beta, se, W, p_val, q_val, diff_abn,
-            compare.
+    color: use which col to define color, supported cols are index, beta, se, W, p_val, q_val, diff_abn, compare.
     only_sig: If True, drop non-sig rows
     alpha: significance threshold
     conserve: Whether to use the conserve mode
     xy_lab: x, y label in plotting
-    highlight: The palette has two color, one is blue another is orange, and orange is defined as
-                highlight color. So you can define the highlight keyword, if check the keyword, the
-                conditin will be in orange.
+    highlight: The palette has two color, one is blue another is orange, and orange is defined as highlight color. So you can define the highlight keyword, if check the keyword, the conditin will be in orange.
     plot_limit: limit the rows to plot
     """
     ###
@@ -120,6 +116,8 @@ def my_ancombc(
     df_final["color"] = df_final[color].map(
         lambda x: palette[1] if highlight in x else palette[0]# Highlight in orange and the other in blue
     )
+    
+    ## some version of gp.scale_colour_manual will raise error if not drop duplicates
     color_map = df_final.reindex(columns=[color, "color"]).drop_duplicates()
 
     # -----------------------------plotting----------------------------

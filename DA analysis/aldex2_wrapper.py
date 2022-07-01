@@ -41,7 +41,7 @@ def my_aldex(
     res=get_rlist(res_list, "res")
     df_otu=get_rlist(res_list, "df_otu")
     df_meta=get_rlist(res_list,"df_meta")
-    return(res)
+
     # -----------------------------data polishment-relative-------------------
 
     ## drop some redundant
@@ -100,6 +100,8 @@ def my_aldex(
     df_final["color"] = df_final[color].map(
         lambda x: palette[1] if highlight in x else palette[0]# Highlight in orange and the other in blue
     )
+    
+    ## some version of gp.scale_colour_manual will raise error if not drop duplicates
     color_map = df_final.reindex(columns=[color, "color"]).drop_duplicates()
     
     ## get the sort value for plot
