@@ -125,10 +125,6 @@ write.table(new_adj,"adjacency_weigth.tsv",sep="\t",col.names = NA)
 #### delete the edges with weight==0, becasue we don't want to save redundant info.
 g_cor=delete.edges(g_cor, del_index)
 
-#### save the gml
-pretty_print("Save gml.")
-write.graph(g_cor, "weight_res.gml", format = "gml")
-
 #### save node and edge table
 df_cors=get.data.frame(g_cor,what="both")
 
@@ -144,3 +140,8 @@ write.table(df_cor_v,"node_res.tsv",sep="\t",row.names=F)
 df_cor_e=df_cors$edges
 colnames(df_cor_e)=c("source","target","weight")
 write.table(df_cor_e,"edge_res.tsv",sep="\t",row.names=F)
+
+#### save the gml
+pretty_print("Save gml.")
+g_cor$label=df_cor_v$label
+write.graph(g_cor, "weight_res.gml", format = "gml")
