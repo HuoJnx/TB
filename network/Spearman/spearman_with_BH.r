@@ -84,8 +84,8 @@ write.table(res_cor,"original_cor.tsv",sep="\t",col.names = NA)
 g_p=graph_from_adjacency_matrix(as.matrix(res_p),mode="undirected",weight=TRUE,diag=FALSE,add.colnames=NA)
 E(g_p)$weight=p.adjust(E(g_p)$weight,"BH")
 
-#### get the mask_index and del_index
-mask_index=(E(g_p)$weight> 0.05)
+#### get the mask_index and del_index (>0.05 or ==NA/NAN/Inf)
+mask_index=(E(g_p)$weight> 0.05)|(!is.finite(E(g_p)$weight))
 del_index=which(mask_index)
 
 #### save the adjust p matrix
@@ -118,12 +118,27 @@ write.table(new_adj,"adjacency_weigth.tsv",sep="\t",col.names = NA)
 
 
 
+## final polish
+#### delete the edges with weight==0, becasue we don't want to save redundant info.
+g_cor=delete.edges(g_cor, del_index)
+
+#### give label attr
+V(g_cor)$label=colnames(res_cor)
+
+
+
+
+
+
 
 
 ## save others
 
-#### delete the edges with weight==0, becasue we don't want to save redundant info.
-g_cor=delete.edges(g_cor, del_index)
+
+#### save the gml
+pretty_print("Save gml.")
+write.graph(g_cor, "weight_res.gml", format = "gml")
+
 
 #### save node and edge table
 df_cors=get.data.frame(g_cor,what="both")
@@ -132,8 +147,8 @@ df_cors=get.data.frame(g_cor,what="both")
 #### save the node table
 pretty_print("Save node_res.")
 df_cor_v=df_cors$vertices
-df_cor_v$id=rownames(df_cor_v)
-df_cor_v$label=colnames(res_cor)
+df_cor_v["id"]=rownames(df_cor_v)
+df_cor_v=df_cor_v[,c("id","label")]
 write.table(df_cor_v,"node_res.tsv",sep="\t",row.names=F)
 
 #### save the edge table
@@ -141,7 +156,3 @@ df_cor_e=df_cors$edges
 colnames(df_cor_e)=c("source","target","weight")
 write.table(df_cor_e,"edge_res.tsv",sep="\t",row.names=F)
 
-#### save the gml
-pretty_print("Save gml.")
-g_cor$label=df_cor_v$label
-write.graph(g_cor, "weight_res.gml", format = "gml")
