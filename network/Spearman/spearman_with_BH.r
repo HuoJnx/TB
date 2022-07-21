@@ -9,8 +9,7 @@
 
 ## self function
 pretty_print=function(tt){
-    print(tt)
-    print("")
+    cat(tt,"\n\n")
 }
 
 
@@ -44,6 +43,7 @@ if(is.na(top)){
 
 
 ## import package
+library(tidyverse)
 library(WGCNA)
 library(igraph)
 
@@ -51,7 +51,7 @@ library(igraph)
 
 
 ## get otu_table
-otu_table=read.csv(otu_path,sep="\t",row.names = 1)
+otu_table=read.csv(otu_path,sep="\t",header=T,comment.char="~",row.names = 1)
 
 if(!is.na(top)){
     otu_table=otu_table[0:top,]
@@ -71,59 +71,51 @@ res_cor=res$cor
 res_p[res_p==0]=1e-10
 res_cor[res_cor==0]=1e-10
 
-#### save the original cor
-pretty_print("Save the original corr matrix before adjustment.")
-write.table(res_cor,"original_cor.tsv",sep="\t",col.names = NA)
-
 
 
 
 
 ## adjust the p-value and then get the index needed to mask.
+
+#### get graph
+g_p=graph_from_adjacency_matrix(as.matrix(res_p),mode="undirected",weight=T,diag=F,add.colnames="label")
+
+
+g_cor=graph_from_adjacency_matrix(as.matrix(res_cor),mode="undirected",weight=T,diag=F,add.colnames="label")
+
+
+#### check the length of g_p and g_cor
+if(length(E(g_p))==length(E(g_cor))){
+    pretty_print("The length of p-value equals to corr, continue.")
+}else{
+    stop("The lenght of p-value NOT equals to corr, stop.")
+}
+
 #### the g_p is just for converting the adjacent p matrix to data.frmae format
-g_p=graph_from_adjacency_matrix(as.matrix(res_p),mode="undirected",weight=TRUE,diag=FALSE,add.colnames=NA)
+
 E(g_p)$weight=p.adjust(E(g_p)$weight,"BH")
 
-#### get the mask_index and del_index (>0.05 or ==NA/NAN/Inf)
-mask_index=(E(g_p)$weight> 0.05)|(!is.finite(E(g_p)$weight))
+#### get the mask_index and del_index
+
+mask_index=(E(g_p)$weight> 0.05)|(is.na(E(g_p)$weight))
 del_index=which(mask_index)
 
-#### save the adjust p matrix
-pretty_print("Save the adjust-p (BH) matrix.")
-new_p=get.adjacency(g_p,attr="weight")
-new_p=data.frame(as.matrix(new_p))
-rownames(new_p)=rownames(res_p)
-colnames(new_p)=colnames(res_p)
-write.table(new_p,"adjust_p.tsv",sep="\t",col.names = NA)
 
-## get the corr graph
-g_cor=graph_from_adjacency_matrix(as.matrix(res_cor),mode="undirected",weight=TRUE,diag=FALSE,add.colnames=NA)
+
+
+## polish the corr graph
+
 
 #### mask the p
 E(g_cor)$weight[mask_index]=0
 
 
-
-
-
-## rebuild the new adjacent matrix
-pretty_print("Save the adjaceny_weight matrix after p adjustment.")
-new_adj=get.adjacency(g_cor,attr="weight")
-new_adj=data.frame(as.matrix(new_adj))
-rownames(new_adj)=rownames(res_cor)
-colnames(new_adj)=colnames(res_cor)
-write.table(new_adj,"adjacency_weigth.tsv",sep="\t",col.names = NA)
-
-
-
-
-
-## final polish
 #### delete the edges with weight==0, becasue we don't want to save redundant info.
 g_cor=delete.edges(g_cor, del_index)
 
-#### give label attr
-V(g_cor)$label=colnames(res_cor)
+#### delete the nodes without edges
+del_index2=which(degree(g_cor)==0)
+g_cor=delete_vertices(g_cor,del_index2)
 
 
 
@@ -131,28 +123,6 @@ V(g_cor)$label=colnames(res_cor)
 
 
 
-
-## save others
-
-
-#### save the gml
+## save the gml
 pretty_print("Save gml.")
 write.graph(g_cor, "weight_res.gml", format = "gml")
-
-
-#### save node and edge table
-df_cors=get.data.frame(g_cor,what="both")
-
-
-#### save the node table
-pretty_print("Save node_res.")
-df_cor_v=df_cors$vertices
-df_cor_v["id"]=rownames(df_cor_v)
-df_cor_v=df_cor_v[,c("id","label")]
-write.table(df_cor_v,"node_res.tsv",sep="\t",row.names=F)
-
-#### save the edge table
-df_cor_e=df_cors$edges
-colnames(df_cor_e)=c("source","target","weight")
-write.table(df_cor_e,"edge_res.tsv",sep="\t",row.names=F)
-

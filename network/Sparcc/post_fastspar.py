@@ -1,8 +1,3 @@
-## Description
-#### 1. It masks the adjacent matrix with p>0.05 as 0.
-#### 2. It outputs a gml network file, edge_res and node_res for further analysis like cytoscape. 
-
-
 ## import functions
 
 #### pandas
@@ -91,6 +86,8 @@ string = """
 adj2gml=function(adj_df,file_name="weight_res.gml"){
     library(igraph)
     g = graph_from_adjacency_matrix(as.matrix(adj_df), mode = 'undirected', weighted = TRUE, diag = FALSE)
+    V(g)$label=V(g)$name
+    g=delete_vertex_attr(g,"name")
     write.graph(g,"weight_res.gml",format="gml")
 }
 """

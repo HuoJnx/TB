@@ -53,3 +53,11 @@ def write_meta(df_meta,meta_path,sep=meta_sep):
 
 def write_taxa(df_taxa,taxa_path,sep=taxa_sep):
     df_taxa.write(taxa_path,sep=taxa_sep)
+
+#-------------------------- use --------------------------
+#otu_path="otu_tables (new_version, only include the one with full information from order to species)/OTU_ABS.tsv"
+#meta_path="group_info (maunal, drop DT8, HT2).csv"
+#taxa_path="taxa_tables/Whole_taxa_lineage_taxa_name.tsv"
+#taxa_id_path="taxa_tables/Whole_taxa_lineage_taxa_id.tsv"
+#df_otu,df_meta,df_taxa=read_phy_data(otu_path,meta_path,taxa_path)
+#df_otu,df_meta,df_taxa,df_taxa_id=read_all_data(otu_path,meta_path,taxa_path,taxa_id_path)
